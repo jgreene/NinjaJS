@@ -3,6 +3,8 @@ NinjaJS - A tiny HTML5 canvas framework
 
 NinjaJS is a tiny HTML5 canvas framework that adds support for multitouch drag and drop. (along with some other events)
 
+Dependencies: [underscore.js](http://http://documentcloud.github.com/underscore/)
+
 There are two simple classes included:
 
 * Shape: This is the main class you'll be working with.  You create a shape by providing it with a draw function.
