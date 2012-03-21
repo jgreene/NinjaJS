@@ -36,10 +36,10 @@ There are two simple classes included:
 		* dbltap (this is a double click also)
 
 	- There are various helper functions for working with shapes they are:
-		* setPosition(x,y): Sets the position of the shape to the given x and y coordinates
-		* isPointInPath(x,y): Returns true/false depending upon whether the provider coordinates are inside the shapes path
-		* moveToTop(): moves the shape to the top in the z-index
-		* move(x,y): moves the shape by the specified amount
+		* setPosition(x,y) - sets the position of the shape to the given x and y coordinates
+		* isPointInPath(x,y) - returns true/false depending upon whether the provider coordinates are inside the shapes path
+		* moveToTop() - moves the shape to the top in the z-index
+		* move(x,y) - moves the shape by the specified amount
 
 * Stage: This object is our main canvas.  We pass it's constructor a containerId, a width, and a height.
 	
