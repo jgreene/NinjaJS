@@ -1,4 +1,5 @@
 NinjaJS - A tiny HTML5 canvas framework
+=======================================
 
 NinjaJS is a tiny HTML5 canvas framework that adds support for multitouch drag and drop. (along with some other events)
 
@@ -6,7 +7,7 @@ There are two simple classes included:
 
 * Shape: This is the main class you'll be working with.  You create a shape by providing it with a draw function.
 
-		var shape = new Shape(function(){
+		var shape = new NinjaJS.Shape(function(){
 			var canvas = this.getCanvas();
 			var ctx = this.getContext();
 			ctx.fillRect(25,25,100,100);  
@@ -46,7 +47,7 @@ There are two simple classes included:
 
 	- Next we add shapes to it.
 
-			var shape = new Shape(function(){
+			var shape = new NinjaJS.Shape(function(){
 				var canvas = this.getCanvas(); //get's this shapes canvas
 				var ctx = this.getContext(); //get's this shapes context for the above canvas
 
