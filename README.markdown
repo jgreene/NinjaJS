@@ -39,11 +39,11 @@ There are two simple classes included:
         * mouseover
         * mouseout
         * tap : tap receives an array of taps that corrispond with touches/mouse clicks.  To check for a double tap simply do:
-            shape.bind('tap', function(e){
-                if(e.taps.length !=== 2) { return ;}
 
-                // your double tap logic here
-            });
+                shape.bind('tap', function(e){
+                    if(e.taps.length !=== 2) { return ;}
+                    // your double tap logic here
+                });
 
     - There are various helper functions for working with shapes they are:
         * setPosition(x,y) - sets the position of the shape to the given x and y coordinates
