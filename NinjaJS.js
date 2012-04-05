@@ -78,15 +78,18 @@ NinjaJS.Stage = (function(){
 
                 if(touch == null) { return; }
 
-                var diffX = touch.x - shape.dragPoint.x;
-                var diffY = touch.y - shape.dragPoint.y;
+                var diffX = shape.dragX ? touch.x - shape.dragPoint.x : 0;
+                var diffY = shape.dragY ? touch.y - shape.dragPoint.y : 0;
 
                 if(diffX != 0 || diffY != 0){
                     shape.move(diffX, diffY);
-                    shape.dragPoint = touch;
-                    shape.isMoving = true;
                     e.userPosition = touch;
+                    shape.isMoving = true;
+                    e.draggedX = diffX;
+                    e.draggedY = diffY;
                     shape.trigger('dragmove', e);
+                    shape.dragPoint = touch;
+                    
                     updateStage = true;
                 }
 
@@ -110,6 +113,7 @@ NinjaJS.Stage = (function(){
                 });
 
                 if(!e.touches || touch == null){
+                    e.userPosition = shape.dragPoint;
                     shape.dragPoint = null;
                     shape.isMoving = false;
                     shape.trigger('dragend', e);
@@ -136,7 +140,29 @@ NinjaJS.Stage = (function(){
             });
         };
 
-        var doubleTap = function(e){
+         var createInputEvent = function(eventName){
+            return function(e){
+                e.preventDefault();
+                var touches = getUserPositions(stage, e);
+
+                _.each(stage.shapes, function(shape){
+
+                    if(shape.draggable) { return; }
+
+                    var touch = _.first(_.filter(touches, function(t){
+                        return shape.isPointInPath(t.x, t.y);
+                    }));
+
+                    if(touch == null){ return; }
+
+                    e.userPosition = touch;
+
+                    shape.trigger(eventName, e);
+                });
+            };
+        };
+
+        var tapStart = function(e){
             var touches = getUserPositions(stage, e);
 
             _.each(stage.shapes, function(shape){
@@ -148,30 +174,63 @@ NinjaJS.Stage = (function(){
 
                 if(touch == null) { return; }
 
-                e.userPosition = touch;
-
-                shape.taps = shape.taps + 1;
-                if(shape.taps >= 2){
-                    shape.taps = 0;
-                    shape.trigger('dbltap', e);
-                };
+                if(!shape.taps){
+                    shape.taps = [];
+                }
+                shape.taps.push(touch);
+                
 
                 setTimeout(function(){
-                    shape.taps = 0;
+                    shape.taps = [];
                 }, 300);
             });
 
         }
 
-        stage.canvas.addEventListener('touchstart', doubleTap, false);
+        var tapMove = function(e){
+            e.preventDefault();
+            _.each(stage.shapes, function(shape){
+                shape.taps = [];
+            });
+        }
+
+        var tapEnd = function(e){
+            e.preventDefault();
+            _.each(stage.shapes, function(shape){
+                if(!shape.taps){ return; }
+                if(shape.taps.length > 0){
+                    e.taps = shape.taps;
+                    e.userPosition = _.last(e.taps);
+                    shape.trigger('tap', e);
+                }
+            });
+        }
+
+
+
         stage.canvas.addEventListener('touchstart', dragStart, false);
         stage.canvas.addEventListener('touchmove', dragMove, false);
         stage.canvas.addEventListener('touchend', dragEnd, false);
 
-        stage.canvas.addEventListener('mousedown', doubleTap, false);
         stage.canvas.addEventListener('mousedown', dragStart, false);
         stage.canvas.addEventListener('mousemove', dragMove, false);
         stage.canvas.addEventListener('mouseup', dragEnd, false);
+
+        stage.canvas.addEventListener('touchstart', createInputEvent('inputstart'), false);
+        stage.canvas.addEventListener('touchmove', createInputEvent('inputmove'), false);
+        stage.canvas.addEventListener('touchend', createInputEvent('inputend'), false);
+
+        stage.canvas.addEventListener('mousedown', createInputEvent('inputstart'), false);
+        stage.canvas.addEventListener('mousemove', createInputEvent('inputmove'), false);
+        stage.canvas.addEventListener('mouseup', createInputEvent('inputend'), false);
+
+        stage.canvas.addEventListener('touchstart', tapStart, false);
+        stage.canvas.addEventListener('touchmove', tapMove, false);
+        stage.canvas.addEventListener('touchend', tapEnd, false);
+
+        stage.canvas.addEventListener('mousedown', tapStart, false);
+        stage.canvas.addEventListener('mousemove', tapMove, false);
+        stage.canvas.addEventListener('mouseup', tapEnd, false);
 
         stage.canvas.addEventListener('mousemove', mouseOver, false);
     };
@@ -227,6 +286,7 @@ NinjaJS.Stage = (function(){
         this.draw = function(){
             setTimeout(function(){
                 self.clear();
+                self.reorder();
                 self.shapes.forEach(function(s){ s.draw(); });
             }, 0);
         }
@@ -249,6 +309,8 @@ NinjaJS.Shape = (function(){
         this.events = {};
         this.dragPoint = null;
         this.draggable = false;
+        this.dragX = true;
+        this.dragY = true;
 
         this.isDragging = function(){
             if(self.draggable === false)
