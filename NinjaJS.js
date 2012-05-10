@@ -1,15 +1,14 @@
 // Copyright (c) 2012 Justin Greene
-// NinajS - A mini html5 canvas javascript framework for multi touch drag and drop.
+// NinajS - A mini html5 canvas javascript framework
+// for multi touch drag and drop.
 // MIT License
 
-var NinjaJS = {};
-
-NinjaJS.Stage = (function(){
-    var getUserPositions = function(stage, e){
+var NinjaJS = (function() {
+    var getUserPositions = function(stage, e) {
         var pos = stage.getContainerPosition();
-        var touches = _.map(e.touches, function(touch){
-            var touchX = touch.clientX - pos.left + window.pageXOffset;
-            var touchY = touch.clientY - pos.top + window.pageYOffset;
+        var touches = _.map(e.touches, function(touch) {
+            var touchX = (touch.clientX - pos.left + window.pageXOffset) * stage.resizeRatio;
+            var touchY = (touch.clientY - pos.top + window.pageYOffset) * stage.resizeRatio;
 
             return {
                 x: touchX,
@@ -18,12 +17,12 @@ NinjaJS.Stage = (function(){
             };
         });
 
-        if(touches.length > 0){
+        if (touches.length > 0) {
             return touches;
         }
 
-        var mouseX = e.clientX - pos.left + window.pageXOffset;
-        var mouseY = e.clientY - pos.top + window.pageYOffset;
+        var mouseX = (e.clientX - pos.left + window.pageXOffset) * stage.resizeRatio;
+        var mouseY = (e.clientY - pos.top + window.pageYOffset) * stage.resizeRatio;
 
         return [{
             x: mouseX,
@@ -33,55 +32,55 @@ NinjaJS.Stage = (function(){
     };
 
 
-    var addListeners = function(stage){
+    var addListeners = function(stage) {
 
-        var dragStart = function(e){
+        var dragStart = function(e) {
             e.preventDefault();
 
             var touches = getUserPositions(stage, e);
-
             var usedTouches = [];
-
-            for(var i = stage.shapes.length - 1; i >= 0; i--){
+            for (var i = stage.shapes.length - 1; i >= 0; i--) {
                 var shape = stage.shapes[i];
 
-                var touch = _.first(_.filter(touches, function(t){
+                var touch = _.first(_.filter(touches, function(t) {
                     return shape.isPointInPath(t.x, t.y);
                 }));
 
-                if(touch == null || _.include(usedTouches, touch)) { continue; }
+                if (touch == null || _.include(usedTouches, touch)) { continue; }
 
                 var isDragging = shape.isDragging();
                 shape.dragPoint = touch;
 
                 usedTouches.push(touch);
 
-                if(!isDragging && shape.isDragging()){
+
+
+                if (!isDragging && shape.isDragging()) {
                     e.userPosition = touch;
                     shape.trigger('dragstart', e);
                 }
             }
         };
 
-        var dragMove = function(e){
+        var dragMove = function(e) {
             e.preventDefault();
             var touches = getUserPositions(stage, e);
 
             var updateStage = false;
 
-            _.each(stage.shapes, function(shape){
-                if(!shape.isDragging()){ return; }
+            _.each(stage.shapes, function(shape) {
+                if (!shape.isDragging()) { return; }
 
-                var touch = _.find(touches, function(t){ 
+                var touch = _.find(touches, function(t) {
                     return t.identifier === shape.dragPoint.identifier;
                 });
 
-                if(touch == null) { return; }
+                if (touch == null) { return; }
 
                 var diffX = shape.dragX ? touch.x - shape.dragPoint.x : 0;
                 var diffY = shape.dragY ? touch.y - shape.dragPoint.y : 0;
 
-                if(diffX != 0 || diffY != 0){
+                if (diffX != 0 || diffY != 0) {
                     shape.move(diffX, diffY);
                     e.userPosition = touch;
                     shape.isMoving = true;
@@ -89,30 +88,30 @@ NinjaJS.Stage = (function(){
                     e.draggedY = diffY;
                     shape.trigger('dragmove', e);
                     shape.dragPoint = touch;
-                    
+
                     updateStage = true;
                 }
 
             });
 
-            if(updateStage)
+            if (updateStage)
                 stage.draw();
 
         };
 
-        var dragEnd = function(e){
+        var dragEnd = function(e) {
             e.preventDefault();
 
             var touches = getUserPositions(stage, e);
 
-            _.each(stage.shapes, function(shape){
-                if(!shape.isDragging()){ return; }
+            _.each(stage.shapes, function(shape) {
+                if (!shape.isDragging()) { return; }
 
-                var touch = _.find(touches, function(t){ 
-                    return t.identifier === shape.dragPoint.identifier; 
+                var touch = _.find(touches, function(t) {
+                    return t.identifier === shape.dragPoint.identifier;
                 });
 
-                if(!e.touches || touch == null){
+                if (!e.touches || touch == null) {
                     e.userPosition = shape.dragPoint;
                     shape.dragPoint = null;
                     shape.isMoving = false;
@@ -121,39 +120,39 @@ NinjaJS.Stage = (function(){
             });
         };
 
-        var mouseOver = function(e){
+        var mouseOver = function(e) {
 
             var touches = getUserPositions(stage, e);
 
-            _.each(stage.shapes, function(shape){
-                var hasTouch = _.any(touches, function(t){
+            _.each(stage.shapes, function(shape) {
+                var hasTouch = _.any(touches, function(t) {
                     return shape.isPointInPath(t.x, t.y);
                 });
 
-                if(hasTouch){
+                if (hasTouch) {
                     shape.isMousedOver = true;
                     shape.trigger('mouseover', e);
-                }else if(shape.isMousedOver && !hasTouch){
+                }else if (shape.isMousedOver && !hasTouch) {
                     shape.isMousedOver = false;
                     shape.trigger('mouseout', e);
                 }
             });
         };
 
-         var createInputEvent = function(eventName){
-            return function(e){
+         var createInputEvent = function(eventName) {
+            return function(e) {
                 e.preventDefault();
                 var touches = getUserPositions(stage, e);
 
-                _.each(stage.shapes, function(shape){
+                _.each(stage.shapes, function(shape) {
 
-                    if(shape.draggable) { return; }
+                    if (shape.draggable) { return; }
 
-                    var touch = _.first(_.filter(touches, function(t){
+                    var touch = _.first(_.filter(touches, function(t) {
                         return shape.isPointInPath(t.x, t.y);
                     }));
 
-                    if(touch == null){ return; }
+                    if (touch == null) { return; }
 
                     e.userPosition = touch;
 
@@ -162,47 +161,77 @@ NinjaJS.Stage = (function(){
             };
         };
 
-        var tapStart = function(e){
+        var tapStart = function(e) {
+            e.preventDefault();
             var touches = getUserPositions(stage, e);
 
-            _.each(stage.shapes, function(shape){
-                if(shape.isMoving){ return; }
+            var usedTouches = [];
 
-                var touch = _.first(_.filter(touches, function(t){
-                    return shape.isPointInPath(t.x, t.y);
-                }));
+            for (var i = stage.shapes.length - 1; i >= 0; i--) {
+                (function(i) {
+                    var shape = stage.shapes[i];
 
-                if(touch == null) { return; }
+                    if (shape.isMoving) { return; }
 
-                if(!shape.taps){
-                    shape.taps = [];
-                }
-                shape.taps.push(touch);
-                
+                    var touch = _.first(_.filter(touches, function(t) {
+                        return shape.isPointInPath(t.x, t.y);
+                    }));
 
-                setTimeout(function(){
-                    shape.taps = [];
-                }, 300);
-            });
+                    if (touch == null || _.include(usedTouches, touch)) { return; }
+
+                    if (!shape.taps) {
+                        shape.taps = [];
+                    }
+                    shape.taps.push(touch);
+
+                    usedTouches.push(touch);
+
+                    setTimeout(function() {
+                        shape.taps = [];
+                    }, 300);
+
+                })(i);
+            }
 
         }
 
-        var tapMove = function(e){
+        var tapMove = function(e) {
             e.preventDefault();
-            _.each(stage.shapes, function(shape){
+            _.each(stage.shapes, function(shape) {
                 shape.taps = [];
             });
         }
 
-        var tapEnd = function(e){
+        var tapEnd = function(e) {
             e.preventDefault();
-            _.each(stage.shapes, function(shape){
-                if(!shape.taps){ return; }
-                if(shape.taps.length > 0){
+            _.each(stage.shapes, function(shape) {
+                if (!shape.taps) { return; }
+                if (shape.taps.length > 0) {
                     e.taps = shape.taps;
                     e.userPosition = _.last(e.taps);
                     shape.trigger('tap', e);
                 }
+            });
+        }
+
+        var click = function(e) {
+            e.preventDefault();
+
+            var touches = getUserPositions(stage, e);
+
+            _.each(stage.shapes, function(shape) {
+                if (shape.isMoving) { return; }
+
+                var touch = _.first(_.filter(touches, function(t) {
+                    return shape.isPointInPath(t.x, t.y);
+                }));
+
+                if (touch == null) { return; }
+
+                e.userPosition = touch;
+
+                shape.trigger('click', e);
+
             });
         }
 
@@ -233,174 +262,287 @@ NinjaJS.Stage = (function(){
         stage.canvas.addEventListener('mouseup', tapEnd, false);
 
         stage.canvas.addEventListener('mousemove', mouseOver, false);
+
+        stage.canvas.addEventListener('click', click, false);
     };
 
-    return function(id, width, height){
-        var self = this;
-        this.container = document.getElementById(id);
-        this.canvas = document.createElement('canvas');
-        this.canvas.width = width;
-        this.canvas.height = height;
-        this.context = this.canvas.getContext('2d');
-        this.width = width;
-        this.height = height;
-        this.shapes = [];
-        this.maxZ = 0;
+    var getResizeRatio = function(dim, maxWidth, maxHeight) {
 
-        this.container.appendChild(this.canvas);
-
-        this.add = function(shape){
-            shape.stage = self;
-            shape.z = self.maxZ + 1;
-            self.maxZ = shape.z;
-            this.shapes.push(shape);
-        };
-
-        this.reorder = function(){
-            self.shapes.sort(function(a, b){
-                return a.z - b.z;
-            });
-        }
-
-        this.getContainerPosition = function(){
-            var obj = self.container;
-            var top = 0;
-            var left = 0;
-            while (obj && obj.tagName != "BODY") {
-                top += obj.offsetTop;
-                left += obj.offsetLeft;
-                obj = obj.offsetParent;
+        var ratioX = maxWidth / dim.width;
+        var ratioY = maxHeight / dim.height;
+        return (function() {
+            if (ratioX <= ratioY) {
+                return ratioX;
             }
-            return {
-                top: top,
-                left: left
-            };
-        };
 
-        this.clear = function(){
-            var context = self.context;
-            var canvas = self.canvas;
-            context.clearRect(0, 0, canvas.width, canvas.height);
-        };
+            return ratioY;
+        })();
+    }
 
-        this.draw = function(){
-            setTimeout(function(){
-                self.clear();
-                self.reorder();
-                self.shapes.forEach(function(s){ s.draw(); });
-            }, 0);
-        }
+    var getResizeDimensions = function(dim, maxWidth, maxHeight) {
 
-        addListeners(self);
+        var ratio = getResizeRatio(dim, maxWidth, maxHeight);
 
+        return { width: Math.round(dim.width * ratio), height: Math.round(dim.height * ratio) };
     };
-})();
 
-NinjaJS.Shape = (function(){
-
-    return function(drawFunc){
-        var self = this;
-        this.visible = true;
-        this.drawFunc = drawFunc;
-        this.x = 0;
-        this.y = 0;
-        this.z = 0;
-        this.taps = 0;
-        this.events = {};
-        this.dragPoint = null;
-        this.draggable = false;
-        this.dragX = true;
-        this.dragY = true;
-
-        this.isDragging = function(){
-            if(self.draggable === false)
-                return false;
-
-            return self.dragPoint != null;
+    var removeItem = function(arr) {
+        var what, a = arguments, L = a.length, ax;
+        while (L > 1 && arr.length) {
+            what = a[--L];
+            while ((ax = arr.indexOf(what)) != -1) {
+                arr.splice(ax, 1);
+            }
         }
+        return arr;
+    };
 
 
-        this.getCanvas = function(){
-            if(!self.canvas)
-                self.canvas = document.createElement('canvas');
-            return self.canvas;
-        };
 
-        this.getContext = function(){
-            if(!self.context)
-                self.context = self.canvas.getContext('2d');
-            return self.context;
-        }
+    var Stage = (function() {
 
-        this.redraw = function(){
+
+        return function(elem, canvasWidth, canvasHeight, actualWidth, actualHeight) {
+            var self = this;
+            this.container = elem;
             this.canvas = document.createElement('canvas');
-            this.context = self.canvas.getContext('2d');
-            this.drawFunc.call(self);
-        }
+            this.canvas.width = canvasWidth;
+            this.canvas.height = canvasHeight;
+            this.context = this.canvas.getContext('2d');
+            this.width = canvasWidth;
+            this.height = canvasHeight;
+            this.shapes = [];
+            this.maxZ = 0;
+            this.resizeRatio = 1;
 
-        this.draw = function(){
-            if(!self.visible){ return; }
+            this.container.appendChild(this.canvas);
 
-            var context = self.stage.context;
-            var cachedCanvas = self.getCanvas();
-            context.save();
+            this.add = function(shape) {
+                shape.stage = self;
+                shape.z = self.maxZ + 1;
+                self.maxZ = shape.z;
+                this.shapes.push(shape);
+            };
 
-            if (self.x !== 0 || self.y !== 0) {
-                context.translate(self.x, self.y);
+            this.remove = function(shape) {
+                removeItem(this.shapes, shape);
+            };
+
+            this.reorder = function() {
+                self.shapes.sort(function(a, b) {
+                    return a.z - b.z;
+                });
+            };
+
+            this.getContainerPosition = function() {
+                var _x = 0;
+                var _y = 0;
+                var el = self.canvas;
+                while (el && !isNaN(el.offsetLeft) && !isNaN(el.offsetTop)) {
+                    _x += el.offsetLeft - el.scrollLeft;
+                    _y += el.offsetTop - el.scrollTop;
+                    el = el.offsetParent;
+                }
+                return { top: _y, left: _x };
+            };
+
+            this.clear = function() {
+                var context = self.context;
+                var canvas = self.canvas;
+                context.clearRect(0, 0, canvas.width, canvas.height);
+            };
+
+            this.draw = function() {
+                setTimeout(function() {
+                    self.clear();
+                    self.reorder();
+                    self.shapes.forEach(function(s) { s.draw(); });
+                }, 0);
+            };
+
+            this.resizeCanvas = function(w, h) {
+                var dim = getResizeDimensions({ width: self.canvas.width, height: self.canvas.height }, w, h);
+
+                self.resizeRatio = 1 / getResizeRatio({ width: self.canvas.width, height: self.canvas.height }, w, h);
+
+                self.canvas.style.width = dim.width + 'px';
+                self.canvas.style.height = dim.height + 'px';
+
             }
-            
-            context.drawImage(cachedCanvas, 0, 0, cachedCanvas.width, cachedCanvas.height, 0, 0, cachedCanvas.width, cachedCanvas.height);
-            context.restore();
-        }
-        
 
-        this.bind = function(eventName, func){
-            var e = self.events[eventName];
-            if(!e){
-                e = [];
-                self.events[eventName] = e;
+            addListeners(self);
+
+            if (actualWidth && actualHeight) {
+                self.resizeCanvas(actualWidth, actualHeight);
             }
-            e.push(func);
-        }
 
-        this.trigger = function(eventName, e){
-            var events = self.events[eventName];
-            if(events){
-                for(var i = 0; i < events.length; i++){
-                    events[i](e);
+
+        };
+    })();
+
+    var Shape = (function() {
+
+        return function(drawFunc) {
+            var self = this;
+            this.visible = true;
+            this.drawFunc = drawFunc;
+            this.x = 0;
+            this.y = 0;
+            this.z = 0;
+            this.scale = 1;
+            this.taps = 0;
+            this.events = {};
+            this.dragPoint = null;
+            this.draggable = false;
+            this.dragX = true;
+            this.dragY = true;
+            this.rotation = 0;
+
+            this.isDragging = function() {
+                if (self.draggable === false)
+                    return false;
+
+                return self.dragPoint != null;
+            };
+
+
+            this.getCanvas = function() {
+                if (!self.canvas)
+                    self.canvas = document.createElement('canvas');
+                return self.canvas;
+            };
+
+            this.getContext = function() {
+                if (!self.context)
+                    self.context = self.canvas.getContext('2d');
+                return self.context;
+            };
+
+            this.redraw = function() {
+                this.canvas = document.createElement('canvas');
+                this.context = self.canvas.getContext('2d');
+                this.drawFunc.call(self);
+            };
+
+            this.draw = function() {
+                if (!self.visible) { return; }
+
+                var context = self.stage.context;
+                var cachedCanvas = self.getCanvas();
+                context.save();
+
+                if (self.x !== 0 || self.y !== 0) {
+                    context.translate(self.x, self.y);
+                }
+
+                context.drawImage(cachedCanvas, 0, 0, cachedCanvas.width, cachedCanvas.height, 0, 0, cachedCanvas.width, cachedCanvas.height);
+                context.restore();
+
+
+            };
+
+            this.animateTo = (function() {
+                var isAnimating = false;
+                return function(endX, endY, onMove) {
+                    var shape = self;
+                    if (isAnimating === true) { return; }
+
+                    var distanceX = endX - shape.x;
+                    var distanceY = endY - shape.y;
+
+                    if (distanceX === 0 && distanceY === 0) { return; }
+
+                    var divisor = 4;
+
+                    var distanceXToMove = distanceX < 0 ? Math.ceil(distanceX / divisor) : Math.floor(distanceX / divisor);
+
+                    var distanceYToMove = distanceY < 0 ? Math.ceil(distanceY / divisor) : Math.floor(distanceY / divisor);
+
+                    if (distanceXToMove === 0) {
+                        distanceXToMove = distanceX;
+                    }
+
+                    if (distanceYToMove === 0) {
+                        distanceYToMove = distanceY;
+                    }
+
+                    isAnimating = true;
+
+                    setTimeout(function() {
+                        isAnimating = false;
+                        shape.move(distanceXToMove, distanceYToMove);
+
+                        if (onMove) {
+                            onMove();
+                        }
+
+                        self.stage.draw();
+
+                        self.animateTo(endX, endY, onMove);
+
+                    }, 1000 / 60);
+                };
+            })();
+
+
+            this.bind = function(eventName, func) {
+                var e = self.events[eventName];
+                if (!e) {
+                    e = [];
+                    self.events[eventName] = e;
+                }
+                e.push(func);
+            }
+
+            this.trigger = function(eventName, e) {
+                var events = self.events[eventName];
+                if (events) {
+                    for (var i = 0; i < events.length; i++) {
+                        events[i](e);
+                    }
                 }
             }
-        }
 
-        this.unbind = function(eventName){
-            var e = self.events[eventName];
-            if(e){
-                delete self.events[eventName];
+            this.unbind = function(eventName) {
+                var e = self.events[eventName];
+                if (e) {
+                    delete self.events[eventName];
+                }
             }
-        }
 
-        this.setPosition = function(x,y){
-            self.x = x;
-            self.y = y;
-        }
+            this.setPosition = function(x, y) {
+                self.x = x;
+                self.y = y;
+            }
 
-        this.isPointInPath = function(x,y){
-            var normalized = { x: x - this.x, y: y - this.y }
-    
-            return self.getContext().isPointInPath(normalized.x, normalized.y);
-        }
+            this.isPointInPath = function(x, y) {
+                var normalized = { x: x - this.x, y: y - this.y };
 
-        this.moveToTop = function(){
-            self.z = self.stage.maxZ + 1;
-            self.stage.maxZ = self.z;
-            self.stage.reorder();
-        }
+                //var ratio = 1 / self.stage.resizeRatio;
 
-        this.move = function(x,y){
-            self.x += x;
-            self.y += y;
-        }
+                //var normalized = { x: x * ratio - this.x, y: y * ratio - this.y };
 
-        this.redraw();
-    }
+
+                return self.getContext().isPointInPath(normalized.x, normalized.y);
+            }
+
+            this.moveToTop = function() {
+                self.z = self.stage.maxZ + 1;
+                self.stage.maxZ = self.z;
+                self.stage.reorder();
+            }
+
+            this.move = function(x, y) {
+                self.x += x;
+                self.y += y;
+            }
+
+            this.redraw();
+        }
+    })();
+
+    return {
+        Stage: Stage,
+        Shape: Shape
+    };
 })();
