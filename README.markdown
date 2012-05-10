@@ -51,9 +51,10 @@ There are two simple classes included:
         * moveToTop() - moves the shape to the top in the z-index
         * move(x,y) - moves the shape by the specified amount
 
-* Stage: This object is our main canvas.  We pass it's constructor a containerId, a width, and a height.
+* Stage: This object is our main canvas.  We pass it's constructor an html container element, a width, and a height.
     
-            var stage = new NinaJS.Stage('containerId', 400, 400);
+            var container = document.getElementById('mycontainer');
+            var stage = new NinaJS.Stage(container, 400, 400);
 
     - Next we add shapes to it.
 

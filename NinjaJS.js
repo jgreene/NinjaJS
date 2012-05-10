@@ -518,11 +518,6 @@ var NinjaJS = (function() {
             this.isPointInPath = function(x, y) {
                 var normalized = { x: x - this.x, y: y - this.y };
 
-                //var ratio = 1 / self.stage.resizeRatio;
-
-                //var normalized = { x: x * ratio - this.x, y: y * ratio - this.y };
-
-
                 return self.getContext().isPointInPath(normalized.x, normalized.y);
             }
 
